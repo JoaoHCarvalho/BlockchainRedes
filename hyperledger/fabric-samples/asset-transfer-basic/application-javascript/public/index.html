@@ -88,7 +88,7 @@
         }
 
         async function addAsset(itemId, descricao, quantidade, custodiante, valor) {
-            const response = await fetch('/api/asset', {
+            const response = await fetch('/api/asset/transfer', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
