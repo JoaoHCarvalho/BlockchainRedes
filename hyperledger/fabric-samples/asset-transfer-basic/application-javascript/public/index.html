@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperledger Fabric Assets</title>
+</head>
+<body>
+    <h1>Hyperledger Fabric Assets</h1>
+
+    <h2>Buscar Item</h2>
+    <form id="search-form">
+        <label for="item-id">Item ID:</label>
+        <input type="text" id="item-id" name="item-id" required>
+        <button type="submit">Buscar</button>
+    </form>
+    <div id="search-result"></div>
+
+    <h2>Transferir Custódia de Item</h2>
+    <form id="transfer-form">
+        <label for="transfer-item-id">Item ID:</label>
+        <input type="text" id="transfer-item-id" name="transfer-item-id" required><br>
+        <label for="novo-custodiante">Novo Custodiante:</label>
+        <input type="text" id="novo-custodiante" name="novo-custodiante" required><br>
+        <button type="submit">Transferir Custódia</button>
+    </form>
+    <div id="transfer-result"></div>
+    
+    <h2>Listar Todos os Itens</h2>
+    <button id="list-all">Listar Todos</button>
+    <ul id="assets-list"></ul>
+
+    <h2>Adicionar Novo Item</h2>
+    <form id="add-form">
+        <label for="add-item-id">Item ID:</label>
+        <input type="text" id="add-item-id" name="add-item-id" required><br>
+        <label for="descricao">Descrição:</label>
+        <input type="text" id="descricao" name="descricao" required><br>
+        <label for="quantidade">Quantidade:</label>
+        <input type="number" id="quantidade" name="quantidade" required><br>
+        <label for="custodiante">Custodiante:</label>
+        <input type="text" id="custodiante" name="custodiante" required><br>
+        <label for="valor">Valor:</label>
+        <input type="number" id="valor" name="valor" required><br>
+        <button type="submit">Adicionar</button>
+    </form>
+    <div id="add-result"></div>
+
+    <h2>Listar Todos os Registros de Custódia</h2>
+    <button id="list-custodia">Listar Registros de Custódia</button>
+    <ul id="custodia-list"></ul>
+
+    <script>
+        async function fetchAssets() {
+            const response = await fetch('/api/assets');
+            const assets = await response.json();
+
+            const assetsList = document.getElementById('assets-list');
+            assetsList.innerHTML = '';
+            assets.forEach(asset => {
+                const li = document.createElement('li');
+                li.textContent = `${asset.ID}: ${asset.Descricao} - ${asset.Quantidade} - ${asset.Custodiante} - ${asset.Valor}`;
+                assetsList.appendChild(li);
+            });
+        }
+
+        async function fetchCustodia() {
+            const response = await fetch('/api/custodia');
+            const custodia = await response.json();
+
+            const custodiaList = document.getElementById('custodia-list');
+            custodiaList.innerHTML = '';
+            custodia.forEach(record => {
+                const li = document.createElement('li');
+                li.textContent = `${record.ItemID}: ${record.Custodiante} - ${record.TipoTransacao} - ${record.Timestamp} - ${record.TxID}`;
+                custodiaList.appendChild(li);
+            });
+        }
+
+        async function fetchAssetById(itemId) {
+            const response = await fetch(`/api/asset/${itemId}`);
+            if (response.ok) {
+                const asset = await response.json();
+                document.getElementById('search-result').textContent = `${asset.ID}: ${asset.Descricao} - ${asset.Quantidade} - ${asset.Custodiante} - ${asset.Valor}`;
+            } else {
+                document.getElementById('search-result').textContent = 'Item não encontrado';
+            }
+        }
+
+        async function addAsset(itemId, descricao, quantidade, custodiante, valor) {
+            const response = await fetch('/api/asset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    itemId,
+                    descricao,
+                    quantidade,
+                    custodiante,
+                    valor
+                }),
+            });
+
+            if (response.ok) {
+                document.getElementById('add-result').textContent = 'Item adicionado com sucesso';
+                fetchAssets();
+            } else {
+                document.getElementById('add-result').textContent = 'Falha ao adicionar item';
+            }
+        }
+
+        document.getElementById('search-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const itemId = document.getElementById('item-id').value;
+            fetchAssetById(itemId);
+        });
+
+        document.getElementById('transfer-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const itemId = document.getElementById('transfer-item-id').value;
+            const novoCustodiante = document.getElementById('novo-custodiante').value;
+
+            const response = await fetch('/api/asset/transfer-custodia', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ itemId, novoCustodiante }),
+            });
+
+            if (response.ok) {
+                document.getElementById('transfer-result').textContent = 'Custódia transferida com sucesso';
+                fetchAssets();
+            } else {
+                document.getElementById('transfer-result').textContent = '';
+            }
+        });
+
+        document.getElementById('add-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const itemId = document.getElementById('add-item-id').value;
+            const descricao = document.getElementById('descricao').value;
+            const quantidade = document.getElementById('quantidade').value;
+            const custodiante = document.getElementById('custodiante').value;
+            const valor = document.getElementById('valor').value;
+
+            addAsset(itemId, descricao, quantidade, custodiante, valor);
+        });
+
+        document.getElementById('list-all').addEventListener('click', fetchAssets);
+
+        document.getElementById('list-custodia').addEventListener('click', fetchCustodia);
+
+        fetchAssets();
+    </script>
+</body>
+</html>
