@@ -1,3 +1,18 @@
+sudo su
+sudo apt-get install git
+sudo apt-get install curl
+sudo apt-get install docker-compose
+sudo apt-get install npm
+sudo apt-get install python3 pip
+sudo apt install python3-virtualenv
+sudo apt-get install jq
+sudo systemctl start docker
+sudo usermod -a -G docker <username>
+sudo docker --version
+sudo docker-compose --version
+systemctl enable docker
+
+#abrir terminal da pasta BlockChainRedes
 cd hyperledger
 ./install-fabric.sh
 cd fabric-samples/test-network
